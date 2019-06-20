@@ -9,11 +9,9 @@ typedef int bool;
 #define PI    3.1415926
 
 bool power_eng(double* pld, double* env, double* a, int n);
-bool lu(double* a, double* l, double* u, int n);
-bool lutest(double* a, int* pivot, int n);
+bool lu(double* a, int* pivot, int n);
 bool jacobi_eng(double* ev, double* a, int n);
 bool inv_power_eng(double* pld, double* env, double* a, int n);
-bool inv_power_eng_test(double* pld, double* env, double* a, int n);
 
 int main(int argc, char** argv) {
     //jacobi
@@ -27,7 +25,7 @@ int main(int argc, char** argv) {
     double a[9]={1,1,0.5,1,1,0.25,0.5,0.25,2};
     double pld;
     double env[3] = {1,1,1};
-    power_eng(&pld,env,a,3);
+    inv_power_eng(&pld,env,a,3);
     printf("pld: %.2f\n", pld);
     show(newMatrix(3,1,env));
      //幂法
@@ -73,7 +71,7 @@ int main(int argc, char** argv) {
      */
 }
 
-bool lutest(double* a, int* pivot, int n) {
+bool lu(double* a, int* pivot, int n) {
 	int i, j, k;
 	double max = 0, temp = 0.0;      
 	for (i = 0; i < n - 1; i++){       
@@ -143,12 +141,12 @@ bool guass(double const* lu, int const* p, double* b, int n) {
 	return false;
 }
 
-bool inv_power_eng_test(double* pld, double* env, double* a, int n) {
+bool inv_power_eng(double* pld, double* env, double* a, int n) {
     Matrix* eng = newMatrix(n,1,env);
     Matrix* enk;
     Matrix* temp;
     int* pivot = (int*)malloc(sizeof(int) * n);
-    lutest(a,pivot,n);
+    lu(a,pivot,n);
     int i,j;
     int iter_num = 0;
     double eps = 1;
@@ -171,74 +169,6 @@ bool inv_power_eng_test(double* pld, double* env, double* a, int n) {
     *pld = 1.0 / getMax(eng);
     return false;
 
-}
-
-bool lu(double* a, double* l, double* u, int n) {
-    Matrix* mat = newMatrix(n,n,a);
-    Matrix* lm = newMatrix(n,n,l);
-    Matrix* um = newMatrix(n,n,u);
-    int i,j,k;
-    /* 
-    for(i=1;i<=n;i++) {
-        setData(lm,1,i,i);
-        if(i==1) {
-            setData(um,getData(mat,1,1),1,1);
-            for(j=2;j<=n;j++) {
-                setData(um, getData(mat,1,j),1,j);
-                setData(lm,getData(mat,j,1)/getData(um,1,1),j,1);
-            }
-        } else {
-            double temp;
-            for(j=i;j<=n;j++) {
-                temp = 0;
-                for(k=1;k<i;k++) {
-                    temp = temp + getData(lm,i,k) * getData(um,k,j);
-                }
-                setData(um,getData(mat,i,j) - temp, i, j);
-            }
-            for(j=i+1;j<=n;j++) {
-                temp = 0;
-                for(k=1;k<i;k++) {
-                    temp = temp + getData(lm,j,k) * getData(um,k,i);
-                }
-                if(getData(um,i,i) == 0) {
-                    setData(lm,temp,j,i);
-                } else {
-                    setData(lm,(getData(mat,j,i) - temp)/getData(um,i,i),j,i);
-                }
-            }
-        }
-    }
-    return false;
-    */
-    for(j=1;j<=n;j++) {
-        if (fabs(getData(mat,n,n)) <= 0) {
-            printf("Matrix LU decomposition failed!\n");
-            return true;
-        }
-        for(i=j+1;i<=n;i++) {
-            setData(mat, getData(mat,i,j)/getData(mat,j,j), i,j);
-        }
-        int k;
-        for(i=j+1;i<=n;i++) {
-            for(k=j+1;k<=n;k++) {
-                setData(mat, getData(mat,i,k)-getData(mat,i,j)*getData(mat,j,k), i, k);
-            }
-        }
-    }
-    for(i=1;i<=n;i++) {
-        for(j=1;j<=n;j++) {
-            if(j<i) {
-                setData(lm,getData(mat,i,j), i, j);
-            } else {
-                setData(um, getData(mat,i,j), i, j);
-            }
-        }
-    }
-    for(i=1;i<=n;i++) {
-        setData(lm,1,i,i);
-    }
-    return false;
 }
 
 bool power_eng(double* pld, double* env, double* a, int n) {
@@ -264,62 +194,6 @@ bool power_eng(double* pld, double* env, double* a, int n) {
     }
     *pld = getMax(eng);
     return false;
-}
-
-bool inv_power_eng(double* pld, double* env, double* a, int n) {
-    Matrix* mat = newMatrix(n,n,a);
-    Matrix* eng = newMatrix(n,1,env);
-    Matrix* enk;
-    double* l = (double*)calloc(n * n, sizeof(double));
-    double* u = (double*)calloc(n * n, sizeof(double));
-    Matrix* lm;
-    Matrix* um;
-    if(!lu(a,l,u,n)) {
-        lm = newMatrix(n,n,l);
-        um = newMatrix(n,n,u);
-        show(lm);
-        show(um);
-        return false;
-    } else {
-        return true;
-    }
-    int i,j;
-    int iter_num = 0;
-    double eps = 1;
-    while(eps > delta) {
-        if(iter_num > T) {
-            printf("inv_power_eng limitation exceed\n");
-            return true;
-        }
-        Matrix* temp = eng;
-        enk = multiplyDouble(eng, 1.0 / getAbsMax(eng));
-        Matrix* v = newMatrix(n,1,NULL);
-        for(i=1;i<=n;i++) {
-            double right_hand = getData(enk, i, 1);
-            for(j=1;j<i;j++) {
-                right_hand -= getData(lm,i,j) * getData(v,j,1);
-            }
-            setData(v,right_hand/getData(lm,i,i),i,1);
-        }
-        Matrix* z = newMatrix(n,1,NULL); 
-        for(i=n;i>=1;i--) {
-            double right_hand = getData(v,i,1);
-            for(j=n;j>i;j--) {
-                right_hand -= getData(um,i,j) * getData(z,j,1);
-            }
-            setData(z,right_hand/getData(um,i,i),i,1);
-        }
-        eng = z;
-        eps = fabs(getAbsMax(eng) - getAbsMax(temp));
-        iter_num++;
-    }
-    double* data = convertToArray(enk);
-    for(i=0;i<n;i++) {
-        env[i] = data[i];
-    }
-    *pld = 1.0 / getAbsMax(eng);
-    return false;
-
 }
 
 bool jacobi_eng(double* ev, double* a, int n) {
