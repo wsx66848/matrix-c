@@ -113,14 +113,14 @@ Matrix* addMatrix(Matrix* matrix1, Matrix* matrix2, int operator) {
     return res;
 }
 
-double getMax(Matrix* matrix) {
-    int max = getData(matrix,1,1);
+double getAbsMax(Matrix* matrix) {
+    double max = fabs(getData(matrix,1,1));
     int row = getRow(matrix);
     int col = getCol(matrix);
     int i = 1, j = 1;
     for(i=1;i<=row;i++) {
         for(j=1;j<=col;j++) {
-            double value = getData(matrix, i, j);
+            double value = fabs(getData(matrix, i, j));
             if(value >= max) {
                 max = value; 
             }
@@ -129,14 +129,32 @@ double getMax(Matrix* matrix) {
     return max;
 }
 
-double getMin(Matrix* matrix) {
-    int min = getData(matrix,1,1);
+double getMax(Matrix* matrix) {
+    double max = getData(matrix,1,1);
+    double max_temp = fabs(max);
     int row = getRow(matrix);
     int col = getCol(matrix);
     int i = 1, j = 1;
     for(i=1;i<=row;i++) {
         for(j=1;j<=col;j++) {
             double value = getData(matrix, i, j);
+            double value_temp = fabs(value);
+            if(value_temp >= max_temp) {
+                max = value; 
+            }
+        }
+    }
+    return max;
+}
+
+double getMin(Matrix* matrix) {
+    double min = getData(matrix,1,1);
+    int row = getRow(matrix);
+    int col = getCol(matrix);
+    int i = 1, j = 1;
+    for(i=1;i<=row;i++) {
+        for(j=1;j<=col;j++) {
+            double value = fabs(getData(matrix, i, j));
             if(value < min) {
                 min = value; 
             }

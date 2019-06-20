@@ -24,6 +24,7 @@ Matrix* multiplyDouble(Matrix* matrix, double value);
 Matrix* multiplyMatrix(Matrix* matrix1, Matrix* matrix2);
 double  getMod(Matrix* matrix);
 Matrix* addMatrix(Matrix* matrix1, Matrix* matrix2, int operator);
+double  getAbsMax(Matrix* matrix);
 double  getMax(Matrix* matrix);
 double  getMin(Matrix* matrix);
 void    show(Matrix* matrix);
