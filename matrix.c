@@ -14,11 +14,6 @@ Matrix* newMatrix(int row, int col, double* data) {
     return matrix;
 }
 
-void freeMatrix(Matrix* matrix) {
-    free(matrix->data);
-    free(matrix);
-}
-
 int getRow(Matrix* matrix) {
     return matrix->row;
 }
@@ -147,22 +142,6 @@ double getMax(Matrix* matrix) {
     return max;
 }
 
-double getMin(Matrix* matrix) {
-    double min = getData(matrix,1,1);
-    int row = getRow(matrix);
-    int col = getCol(matrix);
-    int i = 1, j = 1;
-    for(i=1;i<=row;i++) {
-        for(j=1;j<=col;j++) {
-            double value = fabs(getData(matrix, i, j));
-            if(value < min) {
-                min = value; 
-            }
-        }
-    }
-    return min;
-}
-
 double* convertToArray(Matrix* matrix) {
     return matrix->data;
 }
@@ -173,7 +152,7 @@ void show(Matrix* matrix) {
     int i = 1, j = 1;
     for(i=1;i<=row;i++) {
         for(j=1;j<=col;j++) {
-            printf("%.2f ", getData(matrix, i, j));
+            printf("%10.7f ", getData(matrix, i, j));
         }
         printf("\n");
     }

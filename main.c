@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include <time.h>
 
 typedef int bool;
 
@@ -14,61 +15,76 @@ bool jacobi_eng(double* ev, double* a, int n);
 bool inv_power_eng(double* pld, double* env, double* a, int n);
 
 int main(int argc, char** argv) {
-    //jacobi
+    int i,j;
+    int pos = 0;
+    //A
+   /*  
+    int n = 8;
+    double a[64] = {611,196,-192,407,-8,-52,-49,29,
+                    196,899,113,-192,-71,-43,-8,-44,
+                    -192,133,899,196,61,49,8,52,
+                    407,-192,196,611,8,44,59,-23,
+                    -8,-71,61,8,411,-599,208,208,
+                    -52,-43,49,44,-599, 411,208,208,
+                    -49,-8,8,59,208,208,99,-911,
+                    29,-44,52,-23,208,208,-911, 99};
+                    */
+    //B
     /* 
-    double a[9]={1,2,5,0.5,1,2,0.2,0.5,1};
-    double env[3] = {0};
-    jacobi_eng(env, a, 3);
-    show(newMatrix(3,1,env));
+    int n = 10;
+    double a[100] = {0};
+    for(i=0;i<n;i++) {
+        for(j=0;j<n;j++) {
+            a[pos] = 1.0/(i+j+1);
+            pos++;
+        }
+    }
     */
-     //反幂法
-    double a[9]={1,1,0.5,1,1,0.25,0.5,0.25,2};
+    //C
+    /* 
+    int n = 12;
+    double a[144] = {0};
+    double count;
+    for(i=0;i<n;i++) {
+        count = 0;
+        for(j=0;j<n;j++) {
+            double init = n-i;
+            if(j<=i) {
+                a[pos] = init;
+            } else {
+                a[pos] = init-(++count);
+            }
+            pos++;
+        }
+    }
+    */
+
+    //D
+    int n = 20;
+    double a[400] = {0};
+    for(i=0;i<n;i++) {
+        for(j=0;j<n;j++) {
+            a[pos] = sqrt(2 * 1.0 / 21) * sin((i+1)*(j+1)*PI/21);
+            pos++;
+        }
+    }
+
+    //show(newMatrix(n,n,a));
+    struct timeval time_first;  
+    mingw_gettimeofday(&time_first,NULL);
     double pld;
-    double env[3] = {1,1,1};
-    inv_power_eng(&pld,env,a,3);
-    printf("pld: %.2f\n", pld);
-    show(newMatrix(3,1,env));
-     //幂法
-     /* 
-    double a[9]={1,2,5,0.5,1,2,0.2,0.5,1};
-    double pld;
-    double env[3] = {1,1,1};
-    power_eng(&pld, env, a, 3);
-    printf("pld: %.2f\n", pld);
-    show(newMatrix(3,1,env));
-    */
-    //LU分解 
-    /* 
-    double l[9] = {0};
-    double u[9] = {0};
-    double a[9] = {1,2,3,2,5,7,3,5,3};
-    lu(a,l,u, 3);
-    Matrix* lm = newMatrix(3,3,l);
-    Matrix* um = newMatrix(3,3,u);
-    show(lm);
-    show(um);
-    show(multiplyMatrix(lm,um));
-    */
-   //矩阵测试
-    /* 
-     double* a = (double*)malloc(sizeof(double) * 8);
-     int i;
-     for(i=1;i<=8;i++) {
-         a[i] = i;
-     }
-     Matrix* ma = newMatrix(2,4,a);
-     show(ma);
-     Matrix* in = invert(ma);
-     show(in);
-     double max = getMax(ma);
-     show(multiplyDouble(ma, max));
-     show(multiplyDouble(ma, getMin(ma)));
-     show(multiplyMatrix(ma, in));
-     show(addMatrix(ma, ma, 0));
-     show(addMatrix(ma, ma, 1));
-     printf("%.2f\n", getMod(ma));
-     freeMatrix(ma);
-     */
+    double* env = (double*)malloc(sizeof(double) * n);
+    for(i=0;i<n;i++) {
+        env[i] = 1;
+    }
+    //power_eng(&pld, env, a, n);  //幂法
+    //inv_power_eng(&pld, env, a, n); //反幂法
+    jacobi_eng(env, a, n);  //jacobi
+    printf("pld: %10.7f\n", pld); 
+    show(newMatrix(n,1,env));
+    struct timeval time_second;  
+    mingw_gettimeofday(&time_second,NULL);
+    printf("run time: %ldus\n", time_second.tv_usec - time_first.tv_usec);
 }
 
 bool lu(double* a, int* pivot, int n) {
@@ -197,88 +213,62 @@ bool power_eng(double* pld, double* env, double* a, int n) {
 }
 
 bool jacobi_eng(double* ev, double* a, int n) {
-     Matrix* mat = newMatrix(n,n,a);
-     Matrix* eng = newMatrix(n,n,NULL);
-     int i,j;
-     int iter_num = 0;
-     double max = getData(mat, 1, 2);
-     int row = 1;
-     int col = 2;
-     for(i=1;i<=n;i++) {
-         for(j=1;j<=n;j++) {
-             if(i != j) {
-                 setData(eng,0,i,j);
-                 double data = getData(mat, i, j);
-                 if(data > max) {
-                     max = data;
-                     row = i;
-                     col = j;
-                 }
-             } else {
-                 setData(eng,1,i,j);
-             } 
-         }
-     }
-     while(max > delta) {
-         if(iter_num > T) {
-             return true;
-         }
-         double theta;
-         double data = getData(mat,row,col);
-         double rowV = getData(mat, row, row);
-         double colV = getData(mat, col, col);
-         if(rowV == colV) {
-             theta = PI / 4;
-         } else {
-             theta = 0.5 * atan(2.0 * data / (rowV - colV));
-         }
-         double sin_theta = sin(theta);
-         double cos_theta = cos(theta);
-         double sin_2theta = sin(2*theta);
-         double cos_2theta = cos(2*theta);
-         setData(mat, rowV * pow(cos_theta,2) + colV * pow(sin_theta, 2) + data * sin_2theta, row, row);
-         setData(mat, rowV * pow(cos_theta,2) + colV * pow(sin_theta, 2) - data * sin_2theta, col, col);
-         setData(mat, 0.5 * (colV - rowV) * sin_2theta + data * cos_2theta, row, col);
-         setData(mat, getData(mat, row, col), col, row);
-         int k;
-         for(k=1;k<=n;k++) {
-             if(k != row && k!= col) {
-                 double rowk = getData(mat, row, k);
-                 double colk = getData(mat, col, k);
-                 setData(mat, rowk * cos_theta + colk * sin_theta, row, k);
-                 setData(mat, getData(mat, row, k), k, row);
-                 setData(mat, colk * cos_theta - rowk * sin_theta, col, k);
-                 setData(mat, getData(mat, col, k), k, col);
-             }
-         }
-         if(iter_num == 0) {
-             setData(eng, cos_theta, row, row);
-             setData(eng, -sin_theta, row, col);
-             setData(eng, sin_theta, col, row);
-             setData(eng, cos_theta, col, col);
-         } else {
-             for(k=1;k<=n;k++) {
-                 double prow = getData(eng,k,row);
-                 double pcol = getData(eng,k,col);
-                 setData(eng,prow * cos_theta + pcol * sin_theta, k, row);
-                 setData(eng,prow * cos_theta - pcol * sin_theta, k, col);
-             }
-         }
-         for(i=1;i<=n;i++) {
-             for(j=1;j<=n;j++) {
-                 if(i != j) {
-                     double data = getData(mat, i, j);
-                     if(data > max) {
-                         max = data;
-                         row = i;
-                         col = j;
-                     }
-                 } 
-             }
-         }
-         iter_num++;
-     }
-     for(i=0;i<n;i++) {
-         ev[i] = getData(mat, i+1, i+1); 
-     }
+    Matrix* mat = newMatrix(n,n,a);
+    double eps = 1;
+    int i,j,k;
+    int iter_num = 0;
+    while(eps > delta) {
+        if(iter_num > T) {
+            printf("limitation exceed\n");
+            return true;
+        }
+        int p = 1, q = 1; 
+        double mmax = 0;
+        for(i=1;i<=n;i++) {
+            for(j=1;j<=n;j++) {
+                if(i!=j) {
+                    double value = fabs(getData(mat,i,j));
+                    if(value > mmax) {
+                        mmax = value;
+                        p = i;
+                        q = j;
+                    }
+                }
+            }
+        }
+        eps = mmax;
+        double va, vt, vc, vs;
+        va = (getData(mat,q,q) - getData(mat,p,p)) / (2 * getData(mat, p, q));
+        if(va >= 0) {
+            vt = 1.0 / (fabs(va) + sqrt(1+pow(va,2))); 
+        } else {
+            vt = -1.0 / (fabs(va) + sqrt(1+pow(va,2)));
+        }
+        vc = 1.0 / sqrt(1+pow(vt,2));
+        vs = vt * vc;
+        Matrix* ms = newMatrix(n,n,NULL);
+        for(i=1;i<=n;i++) {
+            for(j=1;j<=n;j++) {
+                if(i==j) {
+                    setData(ms,1,i,j);
+                } else {
+                    setData(ms,0,i,j);
+                }
+            }
+        }
+        setData(ms,vc,p,p);
+        setData(ms,vs,p,q);
+        setData(ms,-vs,q,p);
+        setData(ms,vc,q,q);
+        Matrix* ms_invert = invert(ms);
+        Matrix* mt = multiplyMatrix(ms_invert, mat);
+        mat = multiplyMatrix(mt, ms);
+        //printf("%d time\n", iter_num+1);
+        //show(mat);
+        iter_num++;
+    }
+    for(i=0;i<n;i++) {
+        ev[i] = getData(mat,i+1,i+1);
+    }
+    return false;
 }

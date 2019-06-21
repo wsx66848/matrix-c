@@ -14,7 +14,6 @@ struct _Matrix {
 typedef struct _Matrix Matrix;
 
 Matrix* newMatrix(int row, int col,double* data);
-void    freeMatrix(Matrix* matrix);
 int     getRow(Matrix* matrix);
 int     getCol(Matrix* matrix);
 double  getData(Matrix* matrix, int row, int col);
@@ -26,7 +25,6 @@ double  getMod(Matrix* matrix);
 Matrix* addMatrix(Matrix* matrix1, Matrix* matrix2, int operator);
 double  getAbsMax(Matrix* matrix);
 double  getMax(Matrix* matrix);
-double  getMin(Matrix* matrix);
 void    show(Matrix* matrix);
 double* convertToArray(Matrix* matrix);
 
